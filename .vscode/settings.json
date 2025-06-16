@@ -1,0 +1,11 @@
+{
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-11",
+      "path": "C:\\Program Files\\Eclipse Adoptium\\jdk-11.0.27.6-hotspot",
+      "default": true
+    }
+  ],
+  "java.configuration.compilerCompliance": "11",
+  "java.configuration.updateBuildConfiguration": "interactive"
+}
