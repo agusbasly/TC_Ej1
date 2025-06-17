@@ -1,6 +1,9 @@
 package com.comafi.controller;
 
 import com.comafi.model.*;
+import com.comafi.model.dto.AccountBalanceDTO;
+import com.comafi.model.dto.AccountCreationDTO;
+import com.comafi.model.dto.TransferenciaDTO;
 import com.comafi.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,9 +28,18 @@ public class AccountController {
         @ApiResponse(responseCode = "201", description = "Cuenta creada exitosamente"),
         @ApiResponse(responseCode = "400", description = "Datos de cuenta inválidos")
     })
-    public Response crearCuenta(@Parameter(description = "Datos de la cuenta a crear") Account account) {
-        Account nuevaCuenta = service.crearCuenta(account);
-        return Response.status(Response.Status.CREATED).entity(nuevaCuenta).build();
+    public Response crearCuenta(@Parameter(description = "Datos de la cuenta a crear") AccountCreationDTO dto) {
+        try {
+            Account nuevaCuenta = new Account();
+            nuevaCuenta.setDueno(dto.getNombre());
+            nuevaCuenta.setBalance(dto.getBalance() != null ? dto.getBalance() : 0.0);
+            Account cuentaCreada = service.crearCuenta(nuevaCuenta);
+            return Response.status(Response.Status.CREATED).entity(cuentaCreada).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error inesperado").build();
+        }
     }
 
     @GET
@@ -77,17 +89,44 @@ public class AccountController {
         @ApiResponse(responseCode = "400", description = "Datos inválidos"),
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
+    
     public Response update(
-            @Parameter(description = "ID de la cuenta") @PathParam("id") Long id,
-            @Parameter(description = "Nuevo balance de la cuenta") Account body) {
+        @Parameter(description = "ID de la cuenta") @PathParam("id") Long id,
+        @Parameter(description = "Nuevo balance de la cuenta") AccountBalanceDTO body) {
         try {
-            service.actualizarBalance(id, body.getBalance());
-            Account updated = service.obtenerCuentaPorId(id);
-            return Response.ok(updated).build();
+        service.actualizarBalance(id, body.getBalance());
+        Account updated = service.obtenerCuentaPorId(id);
+        return Response.ok(updated).build();
+        } catch (IllegalArgumentException e) {
+        return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (Exception e) {
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error inesperado").build();
+        }
+    }
+    
+    @POST
+    @Path("{sourceId}/transferencia/{targetId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Transferir saldo entre cuentas")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Transferencia exitosa"),
+        @ApiResponse(responseCode = "400", description = "Error de validación o saldo insuficiente"),
+        @ApiResponse(responseCode = "404", description = "Cuenta no encontrada")
+    })
+    public Response transferir(
+        @PathParam("sourceId") Long sourceId,
+        @PathParam("targetId") Long targetId,
+        TransferenciaDTO dto
+    ) {
+        try {
+            service.transferirSaldo(sourceId, targetId, dto.getMonto());
+            return Response.ok("Transferencia realizada con éxito").build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error inesperado").build();
-        }
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                       .entity("Error inesperado").build();
     }
+}
+
 }

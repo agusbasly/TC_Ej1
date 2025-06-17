@@ -1,29 +1,26 @@
 package com.comafi.repository;
-import com.comafi.model.*;
+
+import com.comafi.model.Account;
+import com.comafi.model.Movimiento;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
-import java.util.List;
 import jakarta.persistence.criteria.*;
 
+import java.time.LocalDateTime;
+import java.util.List;
 
 public class MovimientoRepository {
     private EntityManagerFactory emfFactory = Persistence.createEntityManagerFactory("em");
     private EntityManager emf = emfFactory.createEntityManager();
 
-    public void guardar(String tipo, double monto, Account account) {
+    public Movimiento crear(Movimiento movimiento) {
         EntityTransaction transaction = emf.getTransaction();
         try {
             transaction.begin();
-            Movimiento movimiento = new Movimiento();
-            movimiento.setMonto(monto);
-            movimiento.setFecha(LocalDateTime.now());
-            movimiento.setAccount(account);
             emf.persist(movimiento);
             transaction.commit();
+            return movimiento;
         } catch (Exception e) {
-            if (transaction.isActive()) {
-                transaction.rollback();
-            }
+            if (transaction.isActive()) transaction.rollback();
             throw e;
         }
     }
@@ -35,4 +32,29 @@ public class MovimientoRepository {
         cq.select(root).where(cb.equal(root.get("account").get("id"), accountId));
         return emf.createQuery(cq).getResultList();
     }
+    
+    public void crearTransferencia(double monto, Account origen, Account destino) {
+    EntityTransaction transaction = emf.getTransaction();
+    try {
+        transaction.begin();
+
+        Movimiento salida = new Movimiento();
+        salida.setMonto(-monto);
+        salida.setFecha(LocalDateTime.now());
+        salida.setAccount(origen);
+
+        Movimiento entrada = new Movimiento();
+        entrada.setMonto(monto);
+        entrada.setFecha(LocalDateTime.now());
+        entrada.setAccount(destino);
+
+        emf.persist(salida);
+        emf.persist(entrada);
+
+        transaction.commit();
+    } catch (Exception e) {
+        if (transaction.isActive()) transaction.rollback();
+        throw e;
+    }
+}
 }

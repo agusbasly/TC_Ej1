@@ -35,4 +35,30 @@ public class AccountService {
             throw new RuntimeException("Cuenta no encontrada");
         }
     }
+    public void transferirSaldo(Long sourceId, Long targetId, double monto) {
+    if (monto <= 0) {
+        throw new IllegalArgumentException("El monto debe ser positivo.");
+    }
+
+    Account origen = obtenerCuentaPorId(sourceId);
+    Account destino = obtenerCuentaPorId(targetId);
+
+    if (origen == null || destino == null) {
+        throw new IllegalArgumentException("Una de las cuentas no existe.");
+    }
+
+    if (origen.getBalance() < monto) {
+        throw new IllegalArgumentException("Saldo insuficiente en la cuenta origen.");
+    }
+
+    origen.setBalance(origen.getBalance() - monto);
+    destino.setBalance(destino.getBalance() + monto);
+
+    repo.actualizar(origen);
+    repo.actualizar(destino);
+
+    MovimientoRepository movimientoRepo = new MovimientoRepository();
+    movimientoRepo.crearTransferencia(monto, origen, destino);
+}
+
 }
