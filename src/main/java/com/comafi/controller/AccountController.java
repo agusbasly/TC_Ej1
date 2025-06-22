@@ -80,7 +80,7 @@ public class AccountController {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
     }
-
+    
     @PUT
     @Path("/{id}/balance")
     @Operation(summary = "Actualizar balance", description = "Actualiza el balance de una cuenta específica")
@@ -104,6 +104,7 @@ public class AccountController {
         }
     }
     
+    // Transferencia de saldo entre cuentas
     @POST
     @Path("{sourceId}/transferencia/{targetId}")
     @Consumes(MediaType.APPLICATION_JSON)

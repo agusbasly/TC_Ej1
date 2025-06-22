@@ -46,8 +46,7 @@ public class App {
         }
 
         HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), config);
-
-        // ✅ Ruta absoluta al folder swagger-ui (ajustada a desarrollo)
+ 
         String swaggerPath = Paths.get("src", "main", "resources", "swagger-ui").toAbsolutePath().toString();
         System.out.println("📂 Sirviendo Swagger UI desde: " + swaggerPath);
 
